@@ -1,0 +1,119 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fafafa" >
+
+    <LinearLayout
+        android:id="@+id/llPeriodSelection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:gravity="center_horizontal"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tvMyExpenses"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="Мої витрати"
+            android:textColor="#000000"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:scaleType="centerInside"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="75dp"
+        android:src="@drawable/delete" />
+
+    <ImageButton
+        android:id="@+id/btnMyExpenses"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/pie_chart"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="23dp"
+        android:layout_marginEnd="20dp"
+        android:contentDescription="Кнопка статистики" />
+
+    <LinearLayout
+        android:id="@+id/llTotalExpenses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@id/llPeriodSelection"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="550dp"
+        android:padding="16dp"
+        android:background="@drawable/rounded_background"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:elevation="4dp" >
+
+        <TextView
+            android:id="@+id/tvTotalExpense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Загальні витрати"
+            android:textSize="25sp"
+            android:textColor="#000000"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvTotalAmount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0.00 ₴"
+            android:textSize="28sp"
+            android:textColor="#000000"
+            android:gravity="center"
+            android:layout_marginTop="15dp" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvExpenses"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:background="@drawable/background_rv"
+        android:layout_marginTop="245dp"
+        android:layout_marginBottom="75dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+    />
+
+    <TextView
+        android:id="@+id/tvNoExpenses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Щоб додати нові витрати, натисніть на +"
+        android:textSize="25sp"
+        android:textColor="#757575"
+        android:gravity="center"
+        android:layout_centerInParent="true" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddExpense"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="16dp"
+        android:src="@drawable/add"
+        android:backgroundTint="#CAE47A"
+        android:contentDescription="Додати витрату" />
+
+</RelativeLayout>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primaryColor">#e9e9e9</color>
+    <color name="mainColor">#abc94f</color>
+    <color name="selectedColor">#000000</color>
+    <color name="defaultColor">#BEBEBE</color>
+    <color name="colorCare">#FFB6C1</color>
+    <color name="colorGifts">#FFD700</color>
+    <color name="colorHome">#FFA07A</color>
+    <color name="colorGames">#7B68EE</color>
+    <color name="colorTaxi">#FF6347</color>
+    <color name="colorPets">#40E0D0</color>
+    <color name="colorFood">#98FB98</color>
+    <color name="colorCar">#4682B4</color>
+    <color name="colorTravel">#00BFFF</color>
+    <color name="colorEntertainment">#FF69B4</color>
+    <color name="colorHealth">#32CD32</color>
+    <color name="colorBills">#DAA520</color>
+    <color name="colorSport">#FF4500</color>
+    <color name="colorOther">#808080</color>
+</resources>

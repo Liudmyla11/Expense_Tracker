@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Expense Tracker</string>
+
+    <string-array name="categories">
+        <item>🛁 Догляд</item>
+        <item>🎁 Подарунки</item>
+        <item>🏠 Будинок</item>
+        <item>🎮 Ігри</item>
+        <item>🚕 Таксі</item>
+        <item>🦮 Тварини</item>
+        <item>🥑 Їжа</item>
+        <item>🚗 Автомобіль</item>
+        <item>✈️ Подорожі</item>
+        <item>🎡 Розваги</item>
+        <item>💊 Здоров’я</item>
+        <item>📝 Рахунки</item>
+        <item>⚽️ Спорт</item>
+    </string-array>
+</resources>
