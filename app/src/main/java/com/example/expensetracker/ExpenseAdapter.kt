@@ -41,6 +41,10 @@ class ExpenseAdapter(private var expenses: List<Expense>) : RecyclerView.Adapter
         notifyDataSetChanged()
     }
 
+    fun getItemAtPosition(position: Int): Any {
+        return displayList[position]
+    }
+
     override fun getItemViewType(position: Int): Int {
         return if (displayList[position] is String) TYPE_HEADER else TYPE_ITEM
     }

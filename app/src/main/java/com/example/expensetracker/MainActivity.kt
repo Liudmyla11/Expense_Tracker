@@ -3,13 +3,19 @@ package com.example.expensetracker
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.recyclerview.widget.ItemTouchHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,6 +23,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var expenseAdapter: ExpenseAdapter
     private lateinit var tvNoExpenses: TextView
     private lateinit var tvTotalAmount: TextView
+
+    private lateinit var database: AppDatabase
+    private lateinit var expenseDao: ExpenseDao
+
     private var expenses = mutableListOf<Expense>()
     private val ADD_EXPENSE_REQUEST = 1
 
@@ -26,6 +36,9 @@ class MainActivity : AppCompatActivity() {
 
         window.statusBarColor = ContextCompat.getColor(this, R.color.mainColor)
 
+        database = AppDatabase.getDatabase(this)
+        expenseDao = database.expenseDao()
+
         recyclerView = findViewById(R.id.rvExpenses)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -34,9 +47,9 @@ class MainActivity : AppCompatActivity() {
 
         tvNoExpenses = findViewById(R.id.tvNoExpenses)
         tvTotalAmount = findViewById(R.id.tvTotalAmount)
-        updateTotalExpenses()
 
-        addTestData()
+        setupSwipeToDelete()
+        observeExpenses()
 
         val fabAddExpense: FloatingActionButton = findViewById(R.id.fabAddExpense)
         fabAddExpense.setOnClickListener {
@@ -46,42 +59,30 @@ class MainActivity : AppCompatActivity() {
 
         val btnStatistics: ImageButton = findViewById(R.id.btnMyExpenses)
         btnStatistics.setOnClickListener {
-            startActivity(Intent(this, StatisticsActivity::class.java))
+            val intent = Intent(this, StatisticsActivity::class.java)
+            intent.putExtra("expenses", ArrayList(expenses))
+            startActivity(intent)
         }
 
         val btnDelete: ImageButton = findViewById(R.id.btnDelete)
         btnDelete.setOnClickListener {
             showDeleteConfirmationDialog()
         }
+    }
 
-        checkExpensesVisibility()
-
-        btnStatistics.setOnClickListener {
-            val intent = Intent(this, StatisticsActivity::class.java)
-            intent.putExtra("expenses", ArrayList(expenses))
-            startActivity(intent)
+    private fun observeExpenses() {
+        lifecycleScope.launch {
+            expenseDao.getAllExpenses().collectLatest { expenses ->
+                this@MainActivity.expenses = expenses.toMutableList()
+                sortExpensesByDate()
+                expenseAdapter.updateExpenses(expenses)
+                updateTotalExpenses(expenses)
+                checkExpensesVisibility(expenses)
+            }
         }
     }
 
-    private fun addTestData() {
-        expenses.add(Expense("\uD83E\uDD51 Їжа", 100.0, "2024-06-23", "Обід"))
-        expenses.add(Expense("\uD83D\uDE97 Автомобіль", 155.0, "2024-06-16", ""))
-        expenses.add(Expense("\uD83C\uDFA1 Розваги", 350.0, "2024-06-19", "Парк-розваг"))
-        expenses.add(Expense("\uD83C\uDFA1 Розваги", 150.0, "2024-07-03", "Кіно"))
-        expenses.add(Expense("\uD83E\uDDAE Тварини", 200.0, "2024-12-15", "Корм"))
-        expenses.add(Expense("\uD83E\uDDAE Тварини", 200.0, "2024-12-14", "Аксесуари"))
-        expenses.add(Expense("\uD83E\uDD51 Їжа", 190.0, "2024-12-16", "Кафе"))
-        expenses.add(Expense("\uD83E\uDD51 Їжа", 247.42, "2024-12-19", "Продукти"))
-        expenses.add(Expense("⚽\uFE0F Спорт", 4000.0, "2024-11-11", "Абонемент"))
-
-        sortExpensesByDate()
-
-        expenseAdapter.updateExpenses(expenses)
-        updateTotalExpenses()
-        checkExpensesVisibility()
-    }
-
-    private fun updateTotalExpenses() {
+    private fun updateTotalExpenses(expenses: List<Expense>) {
         val totalAmount = expenses.sumOf { it.amount }
         val formattedAmount = "%.2f".format(totalAmount)
         val displayedAmount = when {
@@ -92,7 +93,7 @@ class MainActivity : AppCompatActivity() {
         tvTotalAmount.text = "$displayedAmount ₴"
     }
 
-    private fun checkExpensesVisibility() {
+    private fun checkExpensesVisibility(expenses: List<Expense>) {
         if (expenses.isEmpty()) {
             tvNoExpenses.visibility = TextView.VISIBLE
             recyclerView.visibility = RecyclerView.GONE
@@ -100,6 +101,61 @@ class MainActivity : AppCompatActivity() {
             tvNoExpenses.visibility = TextView.GONE
             recyclerView.visibility = RecyclerView.VISIBLE
         }
+    }
+
+    private fun setupSwipeToDelete() {
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+
+                // перевірка, чи це витрата, а не заголовок
+                val item = expenseAdapter.getItemAtPosition(position)
+                if (item !is Expense) {
+                    expenseAdapter.notifyItemChanged(position) // відновлення елементу, якщо це не витрата
+                    return
+                }
+
+                val expenseToDelete = item
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        expenseDao.delete(expenseToDelete)
+
+                        withContext(Dispatchers.Main) {
+                            expenses.remove(expenseToDelete)
+                            expenseAdapter.updateExpenses(expenses)
+
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Витрату видалено",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            checkExpensesVisibility(expenses)
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Помилка при видаленні: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            expenseAdapter.notifyItemChanged(position)
+                        }
+                    }
+                }
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
     private fun showDeleteConfirmationDialog() {
@@ -111,10 +167,9 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Підтвердження видалення")
             .setMessage("Ви впевнені, що хочете очистити всі свої витрати?")
             .setPositiveButton("Так") { _, _ ->
-                expenses.clear()
-                expenseAdapter.updateExpenses(expenses)
-                updateTotalExpenses()
-                checkExpensesVisibility()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    expenseDao.deleteAll()
+                }
                 Toast.makeText(applicationContext, "Витрати очищено", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Ні", null)
@@ -126,11 +181,9 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == ADD_EXPENSE_REQUEST && resultCode == RESULT_OK) {
             val newExpense = data?.getSerializableExtra("expense") as? Expense
             newExpense?.let {
-                    expenses.add(it)
-                    sortExpensesByDate()
-                    expenseAdapter.updateExpenses(expenses)
-                    updateTotalExpenses()
-                    checkExpensesVisibility()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    expenseDao.insert(it)
+                }
             }
         }
     }
@@ -139,3 +192,4 @@ class MainActivity : AppCompatActivity() {
         expenses.sortByDescending { it.date }
     }
 }
+

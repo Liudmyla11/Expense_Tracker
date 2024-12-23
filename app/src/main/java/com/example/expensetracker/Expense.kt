@@ -2,10 +2,15 @@ package com.example.expensetracker
 
 import java.io.Serializable
 import java.text.SimpleDateFormat
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.Calendar
 import java.util.Locale
 
+@Entity(tableName = "expenses")
 data class Expense(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
     val category: String,
     val amount: Double,
     val date: String,
